@@ -1,0 +1,7 @@
+.build/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+gnmi_show/_sonic_path_converter.py

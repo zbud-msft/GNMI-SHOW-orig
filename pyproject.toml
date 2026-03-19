@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gnmi_show"
+version = "1.0.0"
+description = "End-to-end CLI tool for querying Azure-managed SONiC switches via gNMI"
+license = "Apache-2.0"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+show_cli = "gnmi_show.cli:main"
+
+[tool.setuptools]
+packages = [
+    "gnmi_show",
+    "gnmi_show.native",
+]
+
+[tool.setuptools.package-data]
+"gnmi_show.native" = ["*.so"]
