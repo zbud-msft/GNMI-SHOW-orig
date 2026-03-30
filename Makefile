@@ -4,15 +4,15 @@ BUILD_DIR = .build
 .PHONY: gnmi_show clean test help sync-converter
 
 sync-converter: ## Pull latest path converter from sonic-mgmt
-	git fetch sonic-mgmt master --depth=1
-	git show sonic-mgmt/master:tests/telemetry/show_cli_to_gnmi_path.py > gnmi_show/_sonic_path_converter.py
-	@echo "Updated _sonic_path_converter.py from sonic-mgmt master."
+	git submodule update --init --depth=1 sonic-mgmt
+	cp sonic-mgmt/tests/telemetry/show_cli_to_gnmi_path.py gnmi_show/_sonic_path_converter.py
+	@echo "Updated _sonic_path_converter.py from sonic-mgmt submodule."
 
 gnmi_show: clean sync-converter ## Build the gnmi_show wheel
 	@echo "Building gnmi_show wheel..."
 	@mkdir -p $(BUILD_DIR)
-	$(PYTHON) -m pip install --quiet build setuptools wheel
-	$(PYTHON) -m build --wheel --outdir $(BUILD_DIR) --no-isolation
+	$(PYTHON) -m pip install --quiet build
+	$(PYTHON) -m build --wheel --outdir $(BUILD_DIR)
 	@echo ""
 	@echo "Build complete. Wheel is in $(BUILD_DIR)/:"
 	@ls -1 $(BUILD_DIR)/*.whl
