@@ -13,6 +13,19 @@ End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show comman
 - [Azure CLI](https://aka.ms/install-azure-cli) (`az`) installed and on PATH
 - Authenticated via `az login`
 
+### WSL note
+
+WSL is not officially supported. If you must use it, install the **Linux**
+Azure CLI *inside* your distro — don't rely on the Windows `az.cmd` shimmed
+through `/mnt/c/`. The tool will refuse to run if `az` resolves to a Windows
+executable, because `az rest` calls made via the Windows shim send request
+bodies with the wrong `Content-Type` and fail with server-side
+`UnsupportedMediaTypeException` errors. Install the Linux CLI with:
+
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+```
+
 ## Building the Wheel
 
 ```bash
