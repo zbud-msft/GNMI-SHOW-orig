@@ -1,5 +1,7 @@
 PYTHON ?= python3
 BUILD_DIR = .build
+VENV = $(BUILD_DIR)/venv
+VENV_PY = $(VENV)/bin/python
 
 .PHONY: gnmi_show clean test help sync-converter
 
@@ -11,8 +13,15 @@ sync-converter: ## Pull latest path converter from sonic-mgmt
 gnmi_show: clean sync-converter ## Build the gnmi_show wheel
 	@echo "Building gnmi_show wheel..."
 	@mkdir -p $(BUILD_DIR)
-	$(PYTHON) -m pip install --quiet build
-	$(PYTHON) -m build --wheel --outdir $(BUILD_DIR)
+	@$(PYTHON) -m venv --help >/dev/null 2>&1 || { \
+		echo "ERROR: python3-venv is not installed."; \
+		echo "Install it with: sudo apt install python3-venv"; \
+		echo "(Required on both Ubuntu 22.04 and Ubuntu 24.04.)"; \
+		exit 1; \
+	}
+	$(PYTHON) -m venv $(VENV)
+	$(VENV_PY) -m pip install --quiet --upgrade pip build
+	$(VENV_PY) -m build --wheel --outdir $(BUILD_DIR)
 	@echo ""
 	@echo "Build complete. Wheel is in $(BUILD_DIR)/:"
 	@ls -1 $(BUILD_DIR)/*.whl

@@ -7,6 +7,9 @@ End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show comman
 - **Linux or macOS** (Windows is not supported)
 - Python 3.8+
 - pip
+- `python3-venv` — **must be pre-installed on both Ubuntu 22.04 and Ubuntu 24.04**
+  (`sudo apt install python3-venv`). The build creates an isolated venv so it works
+  on Ubuntu 24.04 / Debian 12+ under [PEP 668](https://peps.python.org/pep-0668/).
 - [Azure CLI](https://aka.ms/install-azure-cli) (`az`) installed and on PATH
 - Authenticated via `az login`
 
