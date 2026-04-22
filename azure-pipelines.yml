@@ -36,7 +36,7 @@ stages:
 
     - script: |
         set -euo pipefail
-        pip install .build/gnmi_show-*.whl
+        pip install --find-links=vendor .build/gnmi_show-*.whl
         pip install pytest
       displayName: 'Install wheel and test deps'
 
