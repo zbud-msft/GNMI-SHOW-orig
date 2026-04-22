@@ -4,11 +4,19 @@ End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show comman
 
 ## Requirements
 
-- **Linux or macOS** (Windows is not supported)
-- Python 3.8+
-- pip
-- [Azure CLI](https://aka.ms/install-azure-cli) (`az`) installed and on PATH
-- Authenticated via `az login`
+- Linux or macOS (Windows is not supported)
+- Python 3.8+ with the matching `pythonX.Y-venv` package
+- `make`, `git`, `pipx`
+- [Azure CLI](https://aka.ms/install-azure-cli) (`az`), authenticated via `az login`
+
+### Install prerequisites (Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install -y make git pipx \
+    "python$(python3 -c 'import sys;print(f"{sys.version_info.major}.{sys.version_info.minor}")')-venv"
+pipx ensurepath    # one-time; restart shell if prompted
+```
 
 ## Building the Wheel
 
@@ -27,10 +35,11 @@ This fetches the path converter from sonic-mgmt and creates a `.whl` file in `.b
 ## Installing
 
 ```bash
-pip install gnmi_show-1.0.0-py3-none-any.whl
+pipx install .build/gnmi_show-1.0.0-py3-none-any.whl
 ```
 
-No other setup required. The Rust formatter is pre-built and bundled in the wheel.
+`pipx` installs the wheel into an isolated venv and puts `show_cli` on your PATH.
+No other setup required — the Rust formatter is pre-built and bundled in the wheel.
 
 ## Usage
 
@@ -86,4 +95,26 @@ GNMI-SHOW/
   sonic-mgmt/                # Fetched at build time (git remote)
   pyproject.toml             # Package configuration
   Makefile                   # Build commands
+```
+
+## Troubleshooting
+
+**`E: Package 'pythonX.Y-venv' has no installation candidate`**
+The `universe` repository isn't enabled. Run:
+```bash
+sudo add-apt-repository universe
+sudo apt update
+```
+then re-run the install command.
+
+**`UnsupportedMediaTypeException` / `JToken` errors from Azure**
+Your shell is invoking the Windows `az.cmd` rather than a Linux-native `az`
+(common on WSL when Azure CLI is only installed on the Windows side). Check:
+```bash
+which az
+```
+If the path starts with `/mnt/c/` or ends in `.cmd`/`.exe`, install the Linux
+Azure CLI inside your distro so it takes precedence:
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 ```

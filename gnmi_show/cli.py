@@ -17,10 +17,31 @@ Usage:
 import argparse
 import json
 import shlex
+import shutil
 import sys
 
 from gnmi_show.azure_api import AzureApiError, AzureConfig, retrieve_data
 from gnmi_show._sonic_path_converter import ShowCliToGnmiPathConverter, OptionException
+
+
+def _check_platform() -> None:
+    """Reject unsupported platforms and Windows 'az' shimmed in via WSL PATH."""
+    if sys.platform not in ("linux", "darwin"):
+        sys.exit(f"ERROR: gnmi_show supports Linux and macOS only (detected: {sys.platform}).")
+
+    az = shutil.which("az")
+    if az is None:
+        sys.exit(
+            "ERROR: Azure CLI ('az') not found on PATH.\n"
+            "Install from: https://learn.microsoft.com/cli/azure/install-azure-cli"
+        )
+    if az.startswith("/mnt/") or az.lower().endswith((".cmd", ".exe")):
+        sys.exit(
+            f"ERROR: 'az' resolves to a Windows executable ({az}).\n"
+            "On WSL, install the Linux Azure CLI inside your distro so it takes\n"
+            "precedence over the Windows one:\n"
+            "  https://learn.microsoft.com/cli/azure/install-azure-cli-linux"
+        )
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -124,6 +145,7 @@ def run_command(cli_path: str, config: AzureConfig, fmt: str, verbose: bool) -> 
 
 def main() -> int:
     """Main entry point for show_cli."""
+    _check_platform()
     parser = create_parser()
     args = parser.parse_args()
 
