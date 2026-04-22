@@ -27,7 +27,7 @@ gnmi_show: clean sync-converter ## Build the gnmi_show wheel
 	@ls -1 $(BUILD_DIR)/*.whl
 	@echo ""
 	@echo "Install with:"
-	@echo "  pip install $(BUILD_DIR)/gnmi_show-*.whl"
+	@echo "  pipx install --pip-args='--find-links=vendor' $(BUILD_DIR)/gnmi_show-*.whl"
 
 clean: ## Remove build artifacts
 	rm -rf $(BUILD_DIR) build dist *.egg-info gnmi_show.egg-info

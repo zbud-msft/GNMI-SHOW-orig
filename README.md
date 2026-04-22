@@ -1,6 +1,6 @@
 # show_cli
 
-End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show commands from a file, retrieves data via the Azure REST API, and formats the output as familiar CLI tables using the Rust-based gnmi_cli_lib formatter.
+End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show commands from a file, retrieves data via the Azure REST API, and formats the output as familiar CLI tables using the pure-Python `gnmi_cli_lib` formatter (vendored in `vendor/`).
 
 ## Requirements
 
@@ -35,11 +35,14 @@ This fetches the path converter from sonic-mgmt and creates a `.whl` file in `.b
 ## Installing
 
 ```bash
-pipx install .build/gnmi_show-1.0.0-py3-none-any.whl
+pipx install --pip-args="--find-links=vendor" .build/gnmi_show-1.0.0-py3-none-any.whl
 ```
 
 `pipx` installs the wheel into an isolated venv and puts `show_cli` on your PATH.
-No other setup required — the Rust formatter is pre-built and bundled in the wheel.
+`--find-links=vendor` tells pip to resolve the bundled `gnmi_cli_lib` dependency
+from the local `vendor/` directory (the formatter is pure-Python, so this works
+on Linux x86_64/ARM, macOS Intel/Apple Silicon, and WSL alike). Other transitive
+deps (`tabulate`, `natsort`) come from PyPI.
 
 ## Usage
 
@@ -89,10 +92,10 @@ GNMI-SHOW/
   gnmi_show/                 # Python package
     cli.py                   #   CLI entry point (show_cli command)
     azure_api.py             #   Azure REST API client (subprocess + az rest)
-    formatter.py             #   Wrapper around Rust formatter
-    native/                  #   Pre-built Rust binaries
-      gnmi_show_formatter.abi3.so   # Linux (PyO3 abi3, Python 3.8+)
-  sonic-mgmt/                # Fetched at build time (git remote)
+    formatter.py             #   Thin wrapper over gnmi_cli_lib
+  vendor/                    # Vendored pure-Python wheel(s)
+    gnmi_cli_lib-2.7.0-py3-none-any.whl
+  sonic-mgmt/                # Submodule — path converter source
   pyproject.toml             # Package configuration
   Makefile                   # Build commands
 ```
