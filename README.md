@@ -33,17 +33,34 @@ Per-tool install pages: [python](https://www.python.org/downloads/macos/), [git]
 
 ## Install
 
+**1. Clone with submodules:**
+
 ```bash
 git clone --recurse-submodules https://github.com/Azure/GNMI-SHOW.git
 cd GNMI-SHOW
+```
+
+**2. Set up the venv and global symlink:**
+
+```bash
 make install
 ```
 
-`make install` initializes the submodules, creates a local `.venv` with `tabulate` and `natsort`, and symlinks `show_cli` into `~/.local/bin`. Make sure `~/.local/bin` is on your `PATH`:
+This initializes the submodules, creates a local `.venv` with `tabulate` and `natsort`, and symlinks `show_cli` into `~/.local/bin`.
+
+**3. Make sure `~/.local/bin` is on your PATH** (one-time; skip if it already is):
 
 ```bash
-echo $PATH | tr ':' '\n' | grep -q "$HOME/.local/bin" || \
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+(Use `~/.zshrc` instead if you're on zsh, e.g. macOS default.)
+
+**4. Verify:**
+
+```bash
+show_cli --help
 ```
 
 ## Usage

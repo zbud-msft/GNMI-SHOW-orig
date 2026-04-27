@@ -17,8 +17,19 @@ install: sync-converter ## Set up the venv, init submodules, and symlink show_cl
 	mkdir -p $(HOME)/.local/bin
 	ln -sf $(CURDIR)/show_cli $(HOME)/.local/bin/show_cli
 	@echo ""
-	@echo "Installed. Make sure $(HOME)/.local/bin is on your PATH."
-	@echo "Then run: show_cli --help"
+	@echo "Installed. Symlinked to $(HOME)/.local/bin/show_cli."
+	@case ":$$PATH:" in \
+	  *":$(HOME)/.local/bin:"*) \
+	    echo "PATH already includes $(HOME)/.local/bin — run: show_cli --help" ;; \
+	  *) \
+	    echo ""; \
+	    echo "  WARNING: $(HOME)/.local/bin is NOT on your PATH."; \
+	    echo "  Add it (one-time):"; \
+	    echo "    echo 'export PATH=\"\$$HOME/.local/bin:\$$PATH\"' >> ~/.bashrc"; \
+	    echo "    source ~/.bashrc"; \
+	    echo "  (use ~/.zshrc instead if you're on zsh.)"; \
+	    echo "  Then: show_cli --help" ;; \
+	esac
 
 sync-converter: ## Pull latest path converter from sonic-mgmt
 	git submodule update --init --depth=1 sonic-mgmt
