@@ -1,3 +1,7 @@
 [submodule "sonic-mgmt"]
 	path = sonic-mgmt
 	url = https://github.com/sonic-net/sonic-mgmt.git
+[submodule "GNMI-CLI-Converter"]
+	path = GNMI-CLI-Converter
+	url = https://github.com/Azure/GNMI-CLI-Converter.git
+	branch = master

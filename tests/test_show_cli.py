@@ -1,4 +1,4 @@
-"""Mock tests for show_cli to verify the installed binary works."""
+"""Mock tests for show_cli to verify the wrapper script works."""
 
 import subprocess
 import tempfile
@@ -7,10 +7,14 @@ import os
 import pytest
 
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SHOW_CLI = os.path.join(REPO_ROOT, "show_cli")
+
+
 def run_show_cli(*args):
-    """Run show_cli as a subprocess and return the result."""
+    """Run the local show_cli wrapper as a subprocess and return the result."""
     return subprocess.run(
-        ["show_cli", *args],
+        [SHOW_CLI, *args],
         capture_output=True,
         text=True,
     )
@@ -91,3 +95,39 @@ class TestPathConverter:
         path = converter.convert()
         assert path is not None
         assert len(path) > 0
+
+
+class TestFormatter:
+    """Verify the formatter wires through to the gnmi_cli_lib submodule."""
+
+    def test_import_formatter(self):
+        from gnmi_show.formatter import format_cli_output, formatter_version
+        assert format_cli_output is not None
+        assert formatter_version() != ""
+
+    def test_format_known_command(self):
+        from gnmi_show.formatter import format_cli_output
+        output = format_cli_output(
+            "show reboot-cause history",
+            {"REBOOT_CAUSE|2026_03_12_16_04_36": {
+                "cause": "reboot", "comment": "N/A",
+                "time": "Thu Mar 12 04:00:12 PM UTC 2026", "user": "admin",
+            }},
+        )
+        assert "reboot" in output
+        assert "admin" in output
+
+
+class TestWrapperScript:
+    """Verify the bash wrapper itself."""
+
+    def test_wrapper_exists_and_executable(self):
+        assert os.path.isfile(SHOW_CLI), f"{SHOW_CLI} not found"
+        assert os.access(SHOW_CLI, os.X_OK), f"{SHOW_CLI} is not executable"
+
+    def test_wrapper_resolves_through_symlink(self, tmp_path):
+        link = tmp_path / "show_cli_link"
+        os.symlink(SHOW_CLI, link)
+        result = subprocess.run([str(link), "--help"], capture_output=True, text=True)
+        assert result.returncode == 0
+        assert "show_cli" in result.stdout

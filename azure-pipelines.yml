@@ -12,7 +12,7 @@ stages:
 - stage: Build
   jobs:
   - job: BuildAndTest
-    displayName: "Build Wheel & Test CLI"
+    displayName: "Install & Test CLI"
     timeoutInMinutes: 15
 
     pool:
@@ -31,18 +31,14 @@ stages:
 
     - script: |
         set -euo pipefail
-        make gnmi_show
-      displayName: 'Build wheel'
+        make install
+        .venv/bin/pip install pytest
+      displayName: 'Install (venv + symlink) and test deps'
 
     - script: |
         set -euo pipefail
-        pip install --find-links=vendor .build/gnmi_show-*.whl
-        pip install pytest
-      displayName: 'Install wheel and test deps'
-
-    - script: |
-        set -euo pipefail
-        python -m pytest tests/ -v --junit-xml=test-results/results.xml
+        mkdir -p test-results
+        PYTHONPATH=.:GNMI-CLI-Converter/python .venv/bin/python -m pytest tests/ -v --junit-xml=test-results/results.xml
       displayName: 'Run tests'
 
     - task: PublishTestResults@2

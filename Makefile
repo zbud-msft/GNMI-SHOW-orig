@@ -1,39 +1,36 @@
 PYTHON ?= python3
-BUILD_DIR = .build
-VENV = $(BUILD_DIR)/venv
-VENV_PY = $(VENV)/bin/python
+VENV = .venv
 
-.PHONY: gnmi_show clean test help sync-converter
+.PHONY: install sync-converter test help clean
+
+install: sync-converter ## Set up the venv, init submodules, and symlink show_cli
+	git submodule update --init --depth=1 GNMI-CLI-Converter
+	@$(PYTHON) -m venv --help >/dev/null 2>&1 || { \
+		echo "ERROR: $(PYTHON) -m venv is not available."; \
+		echo "On Debian/Ubuntu, install: sudo apt install python3-venv"; \
+		exit 1; \
+	}
+	$(PYTHON) -m venv $(VENV)
+	$(VENV)/bin/pip install --quiet --upgrade pip
+	$(VENV)/bin/pip install --quiet tabulate natsort
+	chmod +x show_cli
+	mkdir -p $(HOME)/.local/bin
+	ln -sf $(CURDIR)/show_cli $(HOME)/.local/bin/show_cli
+	@echo ""
+	@echo "Installed. Make sure $(HOME)/.local/bin is on your PATH."
+	@echo "Then run: show_cli --help"
 
 sync-converter: ## Pull latest path converter from sonic-mgmt
 	git submodule update --init --depth=1 sonic-mgmt
 	cp sonic-mgmt/tests/telemetry/show_cli_to_gnmi_path.py gnmi_show/_sonic_path_converter.py
 	@echo "Updated _sonic_path_converter.py from sonic-mgmt submodule."
 
-gnmi_show: clean sync-converter ## Build the gnmi_show wheel
-	@echo "Building gnmi_show wheel..."
-	@mkdir -p $(BUILD_DIR)
-	@$(PYTHON) -m venv --help >/dev/null 2>&1 || { \
-		echo "ERROR: python3-venv is not installed."; \
-		echo "Install it with: sudo apt install python3-venv"; \
-		echo "(Required on both Ubuntu 22.04 and Ubuntu 24.04.)"; \
-		exit 1; \
-	}
-	$(PYTHON) -m venv $(VENV)
-	$(VENV_PY) -m pip install --quiet --upgrade pip build
-	$(VENV_PY) -m build --wheel --outdir $(BUILD_DIR)
-	@echo ""
-	@echo "Build complete. Wheel is in $(BUILD_DIR)/:"
-	@ls -1 $(BUILD_DIR)/*.whl
-	@echo ""
-	@echo "Install with:"
-	@echo "  pipx install --pip-args='--find-links=vendor' $(BUILD_DIR)/gnmi_show-*.whl"
+test: ## Run tests against the local wrapper
+	PYTHONPATH=.:GNMI-CLI-Converter/python $(VENV)/bin/python -m pytest tests/ -v
 
-clean: ## Remove build artifacts
-	rm -rf $(BUILD_DIR) build dist *.egg-info gnmi_show.egg-info
-
-test: ## Run tests
-	$(PYTHON) -m pytest tests/ -v
+clean: ## Remove venv and the global symlink
+	rm -rf $(VENV)
+	rm -f $(HOME)/.local/bin/show_cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \

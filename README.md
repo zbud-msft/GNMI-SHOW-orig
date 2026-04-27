@@ -1,52 +1,52 @@
 # show_cli
 
-End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show commands from a file, retrieves data via the Azure REST API, and formats the output as familiar CLI tables using the pure-Python `gnmi_cli_lib` formatter (vendored in `vendor/`).
+End-to-end CLI tool for querying Azure-managed SONiC switches. Reads show commands from a file, retrieves data via the Azure REST API, and formats the output as familiar CLI tables using the pure-Python `gnmi_cli_lib` formatter (pulled in as a git submodule).
 
 ## Requirements
 
 - Linux or macOS (Windows is not supported)
-- Python 3.8+ with the matching `pythonX.Y-venv` package
-- `make`, `git`, `pipx`
+- `python3` 3.8+ (with `python3-venv` on Debian/Ubuntu — see prerequisites below)
+- `git`
+- `make`
 - [Azure CLI](https://aka.ms/install-azure-cli) (`az`), authenticated via `az login`
 
-### Install prerequisites (Ubuntu)
+### Install prerequisites
+
+**Ubuntu / Debian:**
 
 ```bash
 sudo apt update
-sudo apt install -y make git pipx \
+sudo apt install -y python3 git make \
     "python$(python3 -c 'import sys;print(f"{sys.version_info.major}.{sys.version_info.minor}")')-venv"
-pipx ensurepath    # one-time; restart shell if prompted
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 ```
 
-## Building the Wheel
+Per-tool install pages: [python](https://www.python.org/downloads/), [git](https://git-scm.com/download/linux), [make](https://www.gnu.org/software/make/), [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli-linux).
+
+**macOS** (with [Homebrew](https://brew.sh)):
 
 ```bash
-git clone <repo-url>
+brew install python git make azure-cli
+```
+
+Per-tool install pages: [python](https://www.python.org/downloads/macos/), [git](https://git-scm.com/download/mac), [make](https://formulae.brew.sh/formula/make), [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli-macos).
+
+## Install
+
+```bash
+git clone --recurse-submodules https://github.com/Azure/GNMI-SHOW.git
 cd GNMI-SHOW
-make gnmi_show
+make install
 ```
 
-This fetches the path converter from sonic-mgmt and creates a `.whl` file in `.build/`:
-
-```
-.build/gnmi_show-1.0.0-py3-none-any.whl
-```
-
-## Installing
+`make install` initializes the submodules, creates a local `.venv` with `tabulate` and `natsort`, and symlinks `show_cli` into `~/.local/bin`. Make sure `~/.local/bin` is on your `PATH`:
 
 ```bash
-pipx install --pip-args="--find-links=vendor" .build/gnmi_show-1.0.0-py3-none-any.whl
+echo $PATH | tr ':' '\n' | grep -q "$HOME/.local/bin" || \
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 ```
-
-`pipx` installs the wheel into an isolated venv and puts `show_cli` on your PATH.
-`--find-links=vendor` tells pip to resolve the bundled `gnmi_cli_lib` dependency
-from the local `vendor/` directory (the formatter is pure-Python, so this works
-on Linux x86_64/ARM, macOS Intel/Apple Silicon, and WSL alike). Other transitive
-deps (`tabulate`, `natsort`) come from PyPI.
 
 ## Usage
-
-Before using `show_cli`, authenticate with Azure:
 
 ```bash
 az login
@@ -90,14 +90,29 @@ show_cli -f cli-input.txt -n <switch_name> \
 ```
 GNMI-SHOW/
   gnmi_show/                 # Python package
-    cli.py                   #   CLI entry point (show_cli command)
+    cli.py                   #   CLI entry point
     azure_api.py             #   Azure REST API client (subprocess + az rest)
     formatter.py             #   Thin wrapper over gnmi_cli_lib
-  vendor/                    # Vendored pure-Python wheel(s)
-    gnmi_cli_lib-2.7.0-py3-none-any.whl
+  show_cli                   # Bash wrapper (sets PYTHONPATH, runs gnmi_show.cli)
+  GNMI-CLI-Converter/        # Submodule — pure-Python gnmi_cli_lib formatter
+    python/gnmi_cli_lib/
   sonic-mgmt/                # Submodule — path converter source
-  pyproject.toml             # Package configuration
-  Makefile                   # Build commands
+  Makefile                   # install / sync-converter / test targets
+  .venv/                     # Created by `make install`; gitignored
+```
+
+## Updating
+
+```bash
+git pull
+git submodule update --remote --merge
+make install     # refreshes the venv
+```
+
+## Uninstall
+
+```bash
+make clean       # removes the .venv and the ~/.local/bin/show_cli symlink
 ```
 
 ## Troubleshooting
@@ -121,3 +136,7 @@ Azure CLI inside your distro so it takes precedence:
 ```bash
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 ```
+
+**`show_cli: command not found` after `make install`**
+`~/.local/bin` isn't on your PATH. Add it (see the [Install](#install) section)
+and restart your shell.

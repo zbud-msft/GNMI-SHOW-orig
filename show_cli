@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Wrapper for the show_cli Python entry point.
+#
+# Resolves its own location even when invoked via a symlink, then sets up
+# PYTHONPATH so gnmi_show and the gnmi_cli_lib submodule are importable.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+export PYTHONPATH="$HERE:$HERE/GNMI-CLI-Converter/python:${PYTHONPATH:-}"
+
+exec "$HERE/.venv/bin/python" -m gnmi_show.cli "$@"
